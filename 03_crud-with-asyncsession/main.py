@@ -37,7 +37,28 @@ async def seed_data() -> None:
         async with session.begin():
             # ✍️ TODO: Create an Account object and add it to session
             # Accountオブジェクトを作成してセッションに追加する
-            pass
+            account = Account(
+                name="Cash",
+                account_type="asset",
+            )
+            session.add(account)
+
+            # flush() to get the PK before inserting JournalEntry
+            # 日本語訳：flush() でPKを確定してからJournalEntryを作る
+            await session.flush()
+
+            entry = JournalEntry(
+                account_id=account.id,
+                amount=Decimal("100000.00"),
+                direction="debit",
+                memo="Initial deposit / 初期入金",
+            )
+            session.add(entry)
+
+        # commit() is called automatically on __aexit__
+        # 日本語訳：ブロックを抜けると自動でcommit
+
+    print(f"Seeded: account.id={account.id}")
 
 
 async def query_accounts() -> None:
