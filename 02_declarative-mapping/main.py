@@ -44,7 +44,7 @@ async def insert_samples():
             # flush: DBに送信するがトランザクションはまだ開いている
             tx = Transaction(
                 account_id=acc.id,
-                amount="1000.00"
+                amount="1000.00",
                 description="Opening balance"
             )
             session.add(tx)
@@ -58,7 +58,7 @@ async def query_accounts():
         # 2.0スタイル — session.execute(select(Model))
         result = await session.execute(select(Account))
         account = result.scalars().all()
-        for acc in accounts:
+        for acc in account:
             print(f"Account: {acc.id} | {acc.name} | txns: {len(acc.transactions)}")
 
 async def main():
