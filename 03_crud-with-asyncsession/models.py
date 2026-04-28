@@ -42,7 +42,8 @@ class Account(Base):
     entries: Mapped[list["JournalEntry"]] = relationship(
         "JournalEntry",
         back_populates="account",
-        lazy="select"
+        lazy="select",
+        cascade="all, delete-orphan",  # ORM側カスケード
     )
 
 
@@ -57,7 +58,7 @@ class JournalEntry(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     account_id: Mapped[int] = mapped_column(
-        ForeignKey("accounts.id"),
+        ForeignKey("accounts.id", ondelete="CASCADE"),
         nullable=False
     )
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)

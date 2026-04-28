@@ -87,7 +87,6 @@ async def query_accounts() -> None:
                 print(f"  Entry: {entry.direction} {entry.amount} ({entry.memo})")
 
 
-
 async def update_account(account_id: int, new_name: str) -> None:
     """Fetch by PK and update name.
     主キーで取得して名前を更新する。
@@ -96,7 +95,16 @@ async def update_account(account_id: int, new_name: str) -> None:
         async with session.begin():
             # ✍️ TODO: use session.get(Account, account_id) then mutate and commit
             # session.get(Account, account_id) で取得 → 変更 → commit
-            pass
+
+            # session.get() uses Identity Map — no extra SELECT if already cached
+            # session.get()はIdentity Mapを使う — キャッシュ済みなら追加SELECTなし
+
+            account = await session.get(Account, account_id)
+            if account is None:
+                raise ValueError(f"Account {account_id} not found")
+            account.name = new_name  # ORM tracks the change automatically
+            # No session.add() needed — dirty object is auto-flushed on commit
+            # session.add()不要 — 変更済みオブジェクトはcommit時に自動flush
 
 
 async def delete_account(account_id: int) -> None:
@@ -107,13 +115,19 @@ async def delete_account(account_id: int) -> None:
         async with session.begin():
             # ✍️ TODO: session.get() then session.delete(obj)
             # session.get() で取得後 session.delete(obj) で削除
-            pass
+            account = await session.get(Account, account_id)
+            if account:
+                await session.delete(account)
 
 
 async def main() -> None:
     await init_db()
     await seed_data()
     await query_accounts()
+    await update_account(1, "Cash (Updated)")
+    await query_accounts()  # 変更確認
+    await delete_account(1)
+    await query_accounts()  # 削除確認（空になるはず）
 
 
 if __name__ == "__main__":
