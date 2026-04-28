@@ -44,7 +44,7 @@ async def seed_data() -> None:
             session.add(account)
 
             # flush() to get the PK before inserting JournalEntry
-            # 日本語訳：flush() でPKを確定してからJournalEntryを作る
+            # flush() でPKを確定してからJournalEntryを作る
             await session.flush()
 
             entry = JournalEntry(
@@ -56,7 +56,7 @@ async def seed_data() -> None:
             session.add(entry)
 
         # commit() is called automatically on __aexit__
-        # 日本語訳：ブロックを抜けると自動でcommit
+        # ブロックを抜けると自動でcommit
 
     print(f"Seeded: account.id={account.id}")
 
@@ -70,7 +70,22 @@ async def query_accounts() -> None:
         # select(Account)文を書き、session.execute()で実行する
         # 🔍 N+1 hint: use selectinload(Account.entries) to eagerly load entries
         # N+1対策：selectinload(Account.entries) でentriesを先行ロードする
-        pass
+
+        # Build SELECT statement — 2.0 style (NOT session.query()!)
+        # 2.0スタイルのSELECT文（session.query()ではない！）
+        stmt = (
+            select(Account)
+            .options(selectinload(Account.entries))
+            .order_by(Account.id)
+        )
+        result = await session.execute(stmt)
+        accounts = result.scalars().all()
+
+        for acc in accounts:
+            print(f"Account: {acc.id} | {acc.name} | {acc.account_type}")
+            for entry in acc.entries:
+                print(f"  Entry: {entry.direction} {entry.amount} ({entry.memo})")
+
 
 
 async def update_account(account_id: int, new_name: str) -> None:
