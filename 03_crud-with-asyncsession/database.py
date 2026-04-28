@@ -33,9 +33,9 @@ AsyncSessionLocal = async_sessionmaker(
 
 async def get_db() -> AsyncSession:
     """Dependency for FastAPI — yields a session per request.
-
     FastAPI依存性注入用 — リクエストごとにセッションを生成して返す。
     """
     # ✍️ TODO: implement using `async with AsyncSessionLocal() as session: yield session`
     # `async with AsyncSessionLocal() as session: yield session` で実装する
-    raise NotImplementedError
+    async with AsyncSessionLocal() as session:
+        yield session
