@@ -5,7 +5,7 @@
 # 実行方法：python -m 04_select-and-where.main
 
 import asyncio
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 # 2.0スタイルの select() をインポート
 from sqlalchemy.orm import selectinload
@@ -56,9 +56,52 @@ async def main() -> None:
     # ✍️ TODO Step 3: select() with relationship (selectinload)
     # 🔍 N+1問題：relationship を fetchする場合は必ず selectinload/joinedload を使うこと
     # Step3でselectinloadを使ったリレーション取得を実装
+    async with AsyncSessionLocal() as session:
+        # Insert a Transaction linked to Cash account
+        # Cashアカウントに紐づくTransactionを挿入
+        async with session.begin():
+            stmt_cash = select(Account).where(Account.name == "Cash")
+            cash = await session.scalar(stmt_cash)
+            session.add(
+                Transaction(
+                    account_id=cash.id,
+                    amount=10000,
+                    direction="debit",
+                    description="Initial deposit",
+                )
+            )
+            # 初期入金トランザクションを追加
+
+        # Fetch Account WITH transactions using selectinload (avoids N+1)
+        # selectinloadでTransactionを一括取得（N+1回避）
+        stmt = select(Account).options(selectinload(Account.transactions))
+        result = await session.scalars(stmt)
+        for acc in result.all():
+            print(f"{acc.name}: {len(acc.transactions)} transactions")
 
     # ✍️ TODO Step 4: aggregate — func.count(), func.sum()
     # Step4でfunc.count()等の集計クエリを実装
+    async with AsyncSessionLocal() as session:
+        # Count total number of accounts
+        # 勘定科目の総数を取得
+        count_stmt = select(func.count(Account.id))
+        total = await session.scalar(count_stmt)
+        print(f"  Total accounts: {total}")
+
+        # Sum of all transaction amounts
+        # 全トランザクションの合計金額を取得
+        sum_stmt = select(func.sum(Transaction.amount))
+        total_amount = await session.scalar(sum_stmt)
+        print(f"  Total amount: {total_amount}")
+
+        # Count transactions grouped by direction (debit / credit)
+        # direction別にトランザクション件数を集計
+        group_stmt = select(Transaction.direction, func.count(Transaction.id)).group_by(
+            Transaction.direction
+        )
+        rows = await session.execute(group_stmt)
+        for direction, cnt in rows.all():
+            print(f"  {direction}: {cnt} transactions")
 
 
 if __name__ == "__main__":
