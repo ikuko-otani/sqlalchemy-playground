@@ -22,7 +22,6 @@ async def create_tables() -> None:
     async with engine.begin() as conn:
         # Drop all tables first, then recreate
         # 既存テーブルを全削除してから再作成（開発専用）
-        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     print("Tables created.")
     # テーブルを作成しました
