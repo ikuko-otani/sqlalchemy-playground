@@ -37,12 +37,30 @@ class Account(Base):
 
     # Transactionとの1対多リレーション
     # lazy="raise" → async環境では明示的にeager loadしないとエラーになる設定
-    # transactions = Mapped[List["Transaction"]] = relationship(
-    #     "Transaction", back_populates="account", lazy="raise"
-    # )
+    transactions: Mapped[List["Transaction"]] = relationship(
+        "Transaction", back_populates="account", lazy="raise"
+    )
 
 
 # ✍️ TODO: Define Transaction model here (with ForeignKey to Account)
 # ここにTransactionモデルを定義（AccountへのForeignKey付き）
-# class Transaction(Base):
-#     __tablename__ = ...
+class Transaction(Base):
+    __tablename__ = "transactions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    # 外部キー（accountsテーブルのid）、親削除時カスケード
+    account_id: Mapped[int] = mapped_column(
+        ForeignKey("accounts.id", ondelete="CASCADE")
+    )
+    # 金額（最小単位：円、pence など整数管理が複式簿記の定石
+    amount: Mapped[int] = mapped_column(Integer, nullable=False)
+    # "debit" または "credit"
+    direction: Mapped[str] = mapped_column(String(6), nullable=False)
+    # 摘要（省略可能）
+    description: Mapped[Optional[str]] = mapped_column(String(255))
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    # Accountへの多対1リレーション
+    account: Mapped["Account"] = relationship("Account", back_populates="transactions")
