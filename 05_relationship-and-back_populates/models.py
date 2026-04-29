@@ -40,7 +40,7 @@ class User(Base):
 
     # One-to-many: one user has many posts
     # 1対多：1ユーザーが複数の投稿を持つ
-    post: Mapped[List["Post"]] = relationship(
+    posts: Mapped[List["Post"]] = relationship(
         back_populates="author",
         lazy="raise",  # raise error if lazy load attempted in async
         cascade="all, delete-orphan",
@@ -66,7 +66,47 @@ class Post(Base):
 
 # TODO: Define Account model here (Step 3 - Flagship connection)
 # Step 3 で payment-ledger-api に対応する Account モデルを定義する
+class Account(Base):
+    __tablename__ = "accounts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    code: Mapped[str] = mapped_column(String(10), unique=True)
+
+    # Entries where this account is debited
+    # この勘定が借方になる仕訳明細
+    debit_entries: Mapped[List["Entry"]] = relationship(
+        back_populates="debit_account",
+        foreign_keys="Entry.debit_account_id",
+        lazy="raise",
+    )
+
+    # Entries where this account is credited
+    # この勘定が貸方になる仕訳明細
+    credit_entries: Mapped[List["Entry"]] = relationship(
+        back_populates="credit_account",
+        foreign_keys="Entry.credit_account_id",
+        lazy="raise",
+    )
 
 
 # TODO: Define Entry model here (Step 3 - Flagship connection)
 # Step 3 で Entry モデルをここに定義する（複式簿記の仕訳明細）
+class Entry(Base):
+    __tablename__ = "entries"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    amount: Mapped[int]  # in cents / 金額（最小通貨単位）
+    debit_account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"))
+    credit_account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"))
+
+    debit_account: Mapped["Account"] = relationship(
+        back_populates="debit_entries",
+        foreign_keys=[debit_account_id],
+        lazy="raise",
+    )
+    credit_account: Mapped["Account"] = relationship(
+        back_populates="credit_entries",
+        foreign_keys=[credit_account_id],
+        lazy="raise",
+    )
