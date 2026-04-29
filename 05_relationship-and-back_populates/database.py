@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 # Connection URL for local Docker PostgreSQL
 # 日本語訳：Docker上のPostgreSQL接続URL
-DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/postgres"
+DATABASE_URL = "postgresql+asyncpg://postgres:password@localhost:5432/playground"
 
 # Create async engine with echo=True to observe generated SQL
 # 日本語訳：echo=True で発行されるSQLをコンソールに出力する（面接でSQLを説明できるようにするため）

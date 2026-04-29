@@ -2,10 +2,10 @@
 # Ref: https://docs.sqlalchemy.org/en/20/orm/relationship_api.html
 #
 # Requires: PostgreSQL running via `docker compose up -d postgres`
-# 日本語訳：PostgreSQLが `docker compose up -d postgres` で起動していること
+# PostgreSQLが `docker compose up -d postgres` で起動していること
 #
 # Learning goals:
-# 日本語訳：学習目標
+# 学習目標
 #   1. Define bidirectional relationships with relationship() and back_populates
 #      双方向リレーションシップを relationship() と back_populates で定義する
 #   2. Understand lazy vs eager loading (selectinload / joinedload)
@@ -23,21 +23,50 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
     # Base class for all ORM models
-    # 日本語訳：すべてのORMモデルの基底クラス
+    # すべてのORMモデルの基底クラス
     pass
 
 
 # TODO: Define User model here (Step 1)
-# 日本語訳：Step 1 で User モデルをここに定義する
+# Step 1 で User モデルをここに定義する
+class User(Base):
+    __tablename__ = "users"
+
+    # Primary key — automatically NOT NULL
+    # 主キー（自動的に NOT NULL）
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(100))
+    email: Mapped[str] = mapped_column(String(200), unique=True)
+
+    # One-to-many: one user has many posts
+    # 1対多：1ユーザーが複数の投稿を持つ
+    post: Mapped[List["Post"]] = relationship(
+        back_populates="author",
+        lazy="raise",  # raise error if lazy load attempted in async
+        cascade="all, delete-orphan",
+    )
 
 
 # TODO: Define Post model here (Step 1)
-# 日本語訳：Step 1 で Post モデルをここに定義する
+# Step 1 で Post モデルをここに定義する
+class Post(Base):
+    __tablename__ = "posts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(String(200))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+
+    # Many-to-one: many posts belong to one user
+    # 多対1：複数の投稿が1ユーザーに属する
+    author: Mapped["User"] = relationship(
+        back_populates="posts",
+        lazy="raise",
+    )
 
 
 # TODO: Define Account model here (Step 3 - Flagship connection)
-# 日本語訳：Step 3 で payment-ledger-api に対応する Account モデルを定義する
+# Step 3 で payment-ledger-api に対応する Account モデルを定義する
 
 
 # TODO: Define Entry model here (Step 3 - Flagship connection)
-# 日本語訳：Step 3 で Entry モデルをここに定義する（複式簿記の仕訳明細）
+# Step 3 で Entry モデルをここに定義する（複式簿記の仕訳明細）
