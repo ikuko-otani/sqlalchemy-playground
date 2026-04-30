@@ -39,7 +39,7 @@ class Book(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
-    author_id: Mapped[int] = mapped_column(ForeignKey="authors.id")
+    author_id: Mapped[int] = mapped_column(ForeignKey("authors.id"))
 
     author: Mapped["Author"] = relationship(
         "Author", back_populates="books", lazy="raise"
