@@ -42,15 +42,44 @@ async def query_without_eager_load() -> None:
         authors = result.scalars().all()
         for author in authors:
             # This will raise because lazy="raise" is set
-            # 日本語訳：lazy="raise" のため、ここで InvalidRequestError が発生する
+            # lazy="raise" のため、ここで InvalidRequestError が発生する
             print(author.books)  # ← intentional error to observe
+
+
+# ✍️ Query WITH selectinload — issues 2 SQL statements total (1 for authors, 1 IN query for books)
+# selectinload を使うと2本のSQLで完結（著者1本＋IN句で本1本）
+async def query_with_selectinload() -> None:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(Author).options(selectinload(Author.books))
+        )
+        authors = result.scalars().all()
+        for author in authors:
+            print(f"{author.name}: {[b.title for b in author.books]}")
+
+
+# ✍️ Query WITH joinedload — issues 1 SQL with LEFT OUTER JOIN
+# joinedload を使うと1本のSQLでJOINして取得する
+async def query_with_joinedload() -> None:
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(Author).options(joinedload(Author.books)))
+        authors = result.unique().scalars().all()
+        # unique() is needed when joinedload is used with collections
+        # コレクションに joinedload を使う場合は unique() が必要
+        for author in authors:
+            print(f"{author.name}: {[b.title for b in author.books]}")
 
 
 async def main() -> None:
     # ✍️ TODO: Insert sample data (Author + Books) and query with selectinload
     # サンプルデータを投入し、selectinload でクエリする
     await seed_data()
-    await query_without_eager_load()
+
+    print("\n--- selectinload ---")
+    await query_with_selectinload()
+
+    print("\n--- joinedload ---")
+    await query_with_joinedload()
 
 
 if __name__ == "__main__":
