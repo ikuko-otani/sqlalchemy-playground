@@ -54,5 +54,33 @@ async def flush_vs_commit_demo() -> None:
         print("Committed. Check DB with psql.")
 
 
+async def nested_transaction_demo() -> None:
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            acc = Account(name="Business", balance=Decimal("2000.00"))
+            session.add(acc)
+            await session.flush()
+
+            # SAVEPOINT: partial rollback without losing the outer transaction
+            # SAVEPOINT：外側のトランザクションを失わずに部分ロールバック
+            async with session.begin_nested():
+                log_ok = TransactionLog(account_id=acc.id, amount=Decimal("500.00"))
+                session.add(log_ok)
+                # This nested block commits to SAVEPOINT, not to DB yet
+                # このブロックはSAVEPOINTにコミット、まだDBには反映されない
+
+                try:
+                    async with session.begin_nested():
+                        bad_log = TransactionLog(
+                            account_id=acc.id, amount=Decimal("-999.00")
+                        )
+                        session.add(bad_log)
+                        raise ValueError("Simulated error — rolling back to SAVEPOINT")
+                        # 意図的エラーでSAVEPOINTまでロールバック
+                except ValueError as e:
+                    print(f"Caught: {e} → rolled back to SAVEPOINT")
+            print("Outer transaction committed. Only log_ok survived.")
+
+
 if __name__ == "__main__":
-    asyncio.run(flush_vs_commit_demo())
+    asyncio.run(nested_transaction_demo())
