@@ -1,0 +1,22 @@
+# Alembic Commands — A-01 Cheatsheet
+
+## Setup
+```bash
+alembic current          # Show current revision
+alembic history --verbose  # Show all revisions
+```
+
+## Migration
+```bash
+alembic revision --autogenerate -m "create ledger_entries table"
+alembic upgrade head     # Apply all
+alembic upgrade +1       # Apply one step
+alembic downgrade -1     # Roll back one step
+alembic downgrade base   # Roll back all
+```
+
+## Debug
+```bash
+alembic show <rev_id>    # Show details of a revision
+alembic heads            # Show branch heads
+```
