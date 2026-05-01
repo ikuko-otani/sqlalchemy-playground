@@ -41,9 +41,17 @@ async def flush_vs_commit_demo() -> None:
 
             # Before flush: id is None because no SQL sent yet
             # flush前はSQLが送られていないのでidはNone
-             print(f"Before flush: acc.id = {acc.id}")
+            print(f"Before flush: acc.id = {acc.id}")
 
-            
+            await session.flush()
+
+            # After flush: id is populated by RETURNING clause
+            # flush後はRETURNING句によってidが取得される
+            print(f"After flush: acc.id = {acc.id}")
+
+        # After commit: data persisted, session state cleared
+        # commit後：データ永続化、セッション状態クリア
+        print("Committed. Check DB with psql.")
 
 
 if __name__ == "__main__":
