@@ -7,7 +7,7 @@ from database import AsyncSessionLocal
 from models import Account, TransactionLog
 
 
-async def main() -> None:
+async def insert_with_begin() -> None:
     # TODO: replace with your actual exercise logic
     # 演習ロジックをここに記述する
     async with AsyncSessionLocal() as session:
@@ -33,5 +33,18 @@ async def main() -> None:
         print("Transaction committed.")
 
 
+async def flush_vs_commit_demo() -> None:
+    async with AsyncSessionLocal() as session:
+        async with session.begin():
+            acc = Account(name="Savings", balance=Decimal("500.00"))
+            session.add(acc)
+
+            # Before flush: id is None because no SQL sent yet
+            # flush前はSQLが送られていないのでidはNone
+             print(f"Before flush: acc.id = {acc.id}")
+
+            
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(flush_vs_commit_demo())
