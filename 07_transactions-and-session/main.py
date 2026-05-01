@@ -1,17 +1,36 @@
 # main.py - Entry point for Chapter 07 exercises
-# Japanese: 第7章演習のエントリーポイント
+# 第7章演習のエントリーポイント
 import asyncio
+from decimal import Decimal
 
 from database import AsyncSessionLocal
+from models import Account, TransactionLog
 
 
 async def main() -> None:
     # TODO: replace with your actual exercise logic
-    # Japanese: 演習ロジックをここに記述する
+    # 演習ロジックをここに記述する
     async with AsyncSessionLocal() as session:
+        # session.begin() auto-commits on success, rolls back on exception
+        # 成功時は自動commit、例外時は自動rollback
         async with session.begin():
             print("Transaction started via session.begin()")
-            # Japanese: session.begin() でトランザクション開始
+            # session.begin() でトランザクション開始
+
+            account = Account(name="Checking", balance=Decimal("1000.00"))
+            session.add(account)
+
+            # flush() sends SQL to DB but does NOT commit yet
+            # flush()はSQLをDBに送るがまだcommitしない
+            await session.flush()
+            print(f"After flush — account.id = {account.id}")
+
+            log = TransactionLog(account_id=account.id, amount=Decimal("1000.00"))
+            session.add(log)
+
+        # commit happens automatically here when `async with session.begin()` exits
+        # ブロック終了時に自動でcommitされる
+        print("Transaction committed.")
 
 
 if __name__ == "__main__":
