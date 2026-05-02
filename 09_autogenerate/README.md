@@ -42,6 +42,42 @@ alembic upgrade head
 python main.py
 ```
 
+## Alembic Commands Used in This Unit
+
+```bash
+# Check current revision state in the DB
+# DBの現在のrevision状態を確認
+alembic current
+
+# Auto-generate a migration from model changes
+# モデルの変更差分からmigrationを自動生成
+alembic revision --autogenerate -m "<message>"
+alembic revision --autogenerate -m "add accounts table"
+alembic revision --autogenerate -m "add entries table with FK to accounts"
+
+# Apply all pending migrations
+# 未適用のmigrationをすべて適用
+alembic upgrade head
+
+# Roll back one migration
+# 1つ前のmigrationに戻す
+alembic downgrade -1
+
+# Show migration history
+# migrationの履歴を表示
+alembic history --verbose
+
+# Check if there are unapplied changes (useful in CI)
+# 未反映の変更がないか確認（CI/CDで使う）
+alembic check
+```
+
+### Notes
+
+- Always review generated migration files before applying (`alembic upgrade head`)
+- `downgrade()` must be implemented for production rollback
+- `alembic check` exits with code 1 if pending changes exist — use in GitHub Actions
+
 ## Reference
 
 - [Alembic autogenerate docs](https://alembic.sqlalchemy.org/en/latest/autogenerate.html)
