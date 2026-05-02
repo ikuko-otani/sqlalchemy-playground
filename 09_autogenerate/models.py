@@ -7,7 +7,7 @@
 # TODO: Define your SQLAlchemy ORM models below using Mapped[X] and mapped_column()
 # 以下に Mapped[X] と mapped_column() を使って ORM モデルを定義する
 
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import String, Numeric, DateTime, ForeignKey
 from datetime import datetime, timezone  # timezone added for aware datetime
 
@@ -37,3 +37,15 @@ class Account(Base):
         default=lambda: datetime.now(timezone.utc),
         # lambda でラップしないと呼び出し時ではなくクラス定義時に評価される
     )
+
+    entries: Mapped[list["Entry"]] = relationship("Entry", back_populates="account")
+
+
+class Entry(Base):
+    __tablename__ = "entries"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"), nullable=False)
+    amount: Mapped[decimal.Decimal] = mapped_column(Numeric(18, 4), nullable=False)
+    description: Mapped[str] = mapped_column(String(255), nullable=True)
+    account: Mapped["Account"] = relationship("Account", back_populates="entries")
