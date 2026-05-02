@@ -4,7 +4,7 @@
 import asyncio
 from sqlalchemy import select, text
 from database import AsyncSessionLocal, engine
-from models import Base  # noqa: F401 - ensures models are registered
+from models import Base, Account, Entry  # noqa: F401 - ensures models are registered
 
 # Base を import することで全モデルが Base.metadata に登録される
 
@@ -24,11 +24,16 @@ async def insert_and_query() -> None:
         async with session.begin():
             # TODO: create Account instances and add to session
             # Account インスタンスを作成してセッションに追加する
-            pass
+            account = Account(name="Cash", account_type="asset")
+            session.add(account)
 
         # TODO: query and print results
         # 結果を取り出して表示する
-        pass
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(select(Account))
+            accounts = result.scalars().all()
+            for a in accounts:
+                print(f"Account: {a.id} | {a.name} | {a.account_type} | {a.balance}")
 
 
 async def main() -> None:
