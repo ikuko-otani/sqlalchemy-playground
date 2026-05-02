@@ -7,8 +7,8 @@ from alembic import context
 
 # Import Base from database module
 # database.py から Base を import する
-from database import Base
-import models  # Required: registers all models into Base.metadata
+from models import Base  # Required: registers all models into Base.metadata
+
 # 必須: このimportをしないと autogenerate が空になる
 
 # this is the Alembic Config object, which provides
